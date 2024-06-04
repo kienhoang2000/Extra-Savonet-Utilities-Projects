@@ -2,6 +2,7 @@ package com.example.demo1.service.impl;
 
 import com.example.demo1.service.DeleteUser;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,6 +15,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -49,36 +51,33 @@ public class DeleteUserImpl implements DeleteUser {
     }
 
     public void processUserIds(List<String> userIds, String token)  {
-        int batchSize = 1000;
+        int batchSize = 260;
         List<List<String>> batches = new ArrayList<>();
 
         for (int i = 0; i < userIds.size(); i += batchSize) {
             int end = Math.min(i + batchSize, userIds.size());
             batches.add(userIds.subList(i, end));
         }
-       for (List<String> batch : batches) {
-           Executor executor = Executors.newFixedThreadPool(300);
-//        CompletableFuture.runAsync(() -> callApi(batch, token),executor);
-//        //wait for all threads to finish
-//        CompletableFuture.allOf().join();
+
+           Executor executor = Executors.newFixedThreadPool(1000);
            List<CompletableFuture> futures = batches.stream()
                    .map(b -> CompletableFuture.runAsync(() -> callApi(b, token), executor))
                    .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
            // wait for all futures to complete
               CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
-       }
     }
 
-    public void callApi(List<String> userIds, String token) {
+
+    public void callApi(List<String> userIds, String token )  {
 //         call api to delete users
         for (String userId : userIds) {
-            url = url + userId;
+            String deleteUrl = url + userId;
             HttpHeaders headers = new HttpHeaders();
             headers.set("Authorization", "Bearer " + token);
 
             HttpEntity<String> entity = new HttpEntity<>(headers);
             try {
-                ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.DELETE, entity, String.class);
+                ResponseEntity<String> response = restTemplate.exchange(deleteUrl, HttpMethod.DELETE, entity, String.class);
                 log.info("user " + userId + " is deleted passed with status code " + response.getStatusCodeValue());
             } catch (Exception e) {
                 log.error("user " + userId  + " : fail is : " + e.getMessage() );
