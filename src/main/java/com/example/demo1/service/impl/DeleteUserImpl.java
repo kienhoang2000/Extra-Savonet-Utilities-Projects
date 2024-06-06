@@ -175,7 +175,7 @@ public class DeleteUserImpl implements DeleteUser {
     }
 
     private void writeListToCsv(List<String> userIdFail) {
-        String filePath = "C:\\Project\\fileTest\\userIdFail401.csv";
+        String filePath = "C:\\Project\\fileTest\\userIdFail.csv";
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
             for (String line : userIdFail) {
                 if(!ObjectUtils.isEmpty(line)) {
