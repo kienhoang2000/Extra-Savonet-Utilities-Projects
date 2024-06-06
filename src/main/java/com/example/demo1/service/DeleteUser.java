@@ -7,4 +7,6 @@ import java.util.concurrent.ExecutionException;
 
 public interface DeleteUser {
     void deleteUsers(MultipartFile[] file, HttpServletRequest request) throws ExecutionException, InterruptedException;
+
+    void scheduleDeleteUsers();
 }
