@@ -152,7 +152,8 @@ public class DeleteUserImpl implements DeleteUser {
             }
         // create a thread pool with 10 threads
            Executor executor = Executors.newFixedThreadPool(10);
-            // Perform user deletion with multi thread
+            //
+
            List<CompletableFuture> deleteUser = batches.stream()
                    .map(b -> CompletableFuture.runAsync(() -> callApi(b, token,userIdFail,error401), executor))
                    .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
@@ -185,7 +186,7 @@ public class DeleteUserImpl implements DeleteUser {
             }
             log.info("Write to CSV file successfully");
         } catch (IOException e) {
-            System.err.println("Error writing to CSV file: " + e.getMessage());
+            log.info("Error writing to CSV file: " + e.getMessage());
         }
     }
 
