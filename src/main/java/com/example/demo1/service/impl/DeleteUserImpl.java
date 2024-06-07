@@ -41,12 +41,6 @@ public class DeleteUserImpl implements DeleteUser {
 
     @Override
     public void deleteUsers(MultipartFile[] file, HttpServletRequest request) {
-//        //get token from request
-//        String token = getToken(request);
-//        // get list UserIds from file
-//        List<String> userIds = getUserIds(file);
-//        // process list UserIds
-//        processUserIds(userIds,token);
     }
 
     @Override
@@ -142,7 +136,7 @@ public class DeleteUserImpl implements DeleteUser {
 
     public void processDeleteUser(List<String> userIds, String token , String directoryPath)  {
         // split list UserIds into batches
-            int batchSize = 1000;
+            int batchSize = 50;
             List<List<String>> batches = new ArrayList<>();
             List<String> userIdFail = new ArrayList<>();
             AtomicBoolean error401 = new AtomicBoolean(false);
@@ -150,8 +144,8 @@ public class DeleteUserImpl implements DeleteUser {
                 int end = Math.min(i + batchSize, userIds.size());
                 batches.add(userIds.subList(i, end));
             }
-        // create a thread pool with 10 threads
-           Executor executor = Executors.newFixedThreadPool(10);
+        // create a thread pool with n threads
+           Executor executor = Executors.newFixedThreadPool(20);
             // Perform user deletion with multi thread
            List<CompletableFuture> deleteUser = batches.stream()
                    .map(b -> CompletableFuture.runAsync(() -> callApi(b, token,userIdFail,error401), executor))
@@ -193,7 +187,7 @@ public class DeleteUserImpl implements DeleteUser {
 
 
     public void callApi(List<String> userIds, String token,List<String> userIdFail , AtomicBoolean error401 )  {
-        for (int i = 0; i <=  userIds.size() ; i++) {
+        for (int i = 0; i <  userIds.size() ; i++) {
             // setup delete url
             String deleteUrl = url + userIds.get(i);
             HttpHeaders headers = new HttpHeaders();
@@ -208,8 +202,12 @@ public class DeleteUserImpl implements DeleteUser {
                     // check if status code is 429 or 401
                     Integer statusCode = ((HttpClientErrorException) e).getRawStatusCode();
                     if(statusCode == 429) {
-                        if(!ObjectUtils.isEmpty((userIds.get(i))))
-                            userIdFail.add(userIds.get(i));
+                        try {
+                            if(!ObjectUtils.isEmpty((userIds.get(i))))
+                                userIdFail.add(userIds.get(i));
+                        }catch (Exception abc) {
+                            log.error("aaaaaaaaaaaaaaaa");
+                        }
                     }else if (statusCode == 401) {
                         error401.set(true);
                         if(!ObjectUtils.isEmpty((userIds.get(i))))
@@ -221,29 +219,4 @@ public class DeleteUserImpl implements DeleteUser {
         }
     }
 
-//    private List<String> getUserIds(MultipartFile[] file) {
-//        List<String> UserIds = new ArrayList<>();
-//        for (MultipartFile f : file) {
-//            try (BufferedReader br = new BufferedReader(new InputStreamReader(f.getInputStream()))) {
-//                String UserId;
-//                while ((UserId = br.readLine()) != null) {
-//                    if(!ObjectUtils.isEmpty(UserId) ){
-//                        UserIds.add(UserId);
-//                    }
-//                }
-//            } catch (IOException e) {
-//                log.error("error when reading file " );
-//            }
-//        }
-//        return UserIds;
-//    }
-
-//    private String getToken(HttpServletRequest request) {
-//        String bearerToken = request.getHeader("Authorization");
-//        if(StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")){
-//            return bearerToken.substring(7);
-//
-//        }
-//        return null;
-//    }
 }

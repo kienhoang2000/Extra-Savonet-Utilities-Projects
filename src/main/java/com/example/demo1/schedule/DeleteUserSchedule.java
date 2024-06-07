@@ -23,7 +23,7 @@ public class DeleteUserSchedule {
 
     private final DeleteUser deleteUser;
 
-    // 30 minutes of operation once
+    // 30 s of operation once
     @Scheduled(cron = "*/30 * * * * *")
     public void deleteUser() {
         deleteUser.scheduleDeleteUsers();
