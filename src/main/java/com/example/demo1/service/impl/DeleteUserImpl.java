@@ -46,7 +46,7 @@ public class DeleteUserImpl implements DeleteUser {
     @Override
     public void scheduleDeleteUsers() {
         // folder containing files
-        String directoryPath = "C:\\Project\\fileTest";
+        String directoryPath = "C:\\Project\\fileDeleteUser\\";
 
         File directory = new File(directoryPath);
         // get all files in folder
@@ -73,22 +73,25 @@ public class DeleteUserImpl implements DeleteUser {
                 if(error401 ) {
                     if (attrs.isRegularFile()) {
                         Files.delete(entry);
+                        log.info("Delete file " + entry.getFileName() + " successfully.");
                     }
                 }
                 // if error 429, delete all files in folder except file contain token
                 else if (!CollectionUtils.isEmpty(userIdFail)){
                     if (attrs.isRegularFile() && !entry.getFileName().toString().contains("token")) {
                         Files.delete(entry);
+                        log.info("Delete file " + entry.getFileName() + " successfully.");
                     }
                 }
                 // if success, delete all files in folder
                 else {
                     if (attrs.isRegularFile()) {
                         Files.delete(entry);
+                        log.info("All files in folder " + directoryPath + " have been deleted.");
                     }
                 }
             }
-            log.info("All files in folder " + directoryPath + " have been deleted.");
+
         } catch (IOException e) {
             log.info("Error while deleting files in folder: " + e.getMessage());
         }
@@ -169,7 +172,7 @@ public class DeleteUserImpl implements DeleteUser {
     }
 
     private void writeListToCsv(List<String> userIdFail) {
-        String filePath = "C:\\Project\\fileTest\\userIdFail.csv";
+        String filePath = "C:\\Project\\fileDeleteUser\\userIdFail.csv";
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
             for (String line : userIdFail) {
                 if(!ObjectUtils.isEmpty(line)) {
@@ -202,12 +205,8 @@ public class DeleteUserImpl implements DeleteUser {
                     // check if status code is 429 or 401
                     Integer statusCode = ((HttpClientErrorException) e).getRawStatusCode();
                     if(statusCode == 429) {
-                        try {
-                            if(!ObjectUtils.isEmpty((userIds.get(i))))
-                                userIdFail.add(userIds.get(i));
-                        }catch (Exception abc) {
-                            log.error("aaaaaaaaaaaaaaaa");
-                        }
+                        if(!ObjectUtils.isEmpty((userIds.get(i))))
+                            userIdFail.add(userIds.get(i));
                     }else if (statusCode == 401) {
                         error401.set(true);
                         if(!ObjectUtils.isEmpty((userIds.get(i))))
